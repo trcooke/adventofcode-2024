@@ -14,30 +14,50 @@ public class App {
         BufferedReader reader = getInput("input");
         int instructionTally = 0;
         for (String line; (line = reader.readLine()) != null;) {
-            Pattern pattern = Pattern.compile("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
-            Matcher matcher = pattern.matcher(line);
-            while (matcher.find()) {
-                String found = line.substring(matcher.start(), matcher.end());
-                String nums = found.substring(found.indexOf("(") + 1, found.lastIndexOf(")"));
-                String[] args = nums.split(",");
-                instructionTally += Integer.parseInt(args[0]) * Integer.parseInt(args[1]);
-            }
+            instructionTally += instructionSum(line);
+        }
+        return instructionTally;
+    }
+
+    private int instructionSum(String input) {
+        Pattern pattern = Pattern.compile("mul\\([0-9]{1,3},[0-9]{1,3}\\)");
+        Matcher matcher = pattern.matcher(input);
+        int instructionTally = 0;
+        while (matcher.find()) {
+            String found = input.substring(matcher.start(), matcher.end());
+            String nums = found.substring(found.indexOf("(") + 1, found.lastIndexOf(")"));
+            String[] args = nums.split(",");
+            instructionTally += Integer.parseInt(args[0]) * Integer.parseInt(args[1]);
         }
         return instructionTally;
     }
 
     long part2() throws IOException {
-        BufferedReader reader = getInput("input-test");
+        BufferedReader reader = getInput("input");
         int instructionTally = 0;
+        boolean enabled = true;
         for (String line; (line = reader.readLine()) != null;) {
-            Pattern pattern = Pattern.compile("(mul\\([0-9]{1,3},[0-9]{1,3}\\))");
-            Matcher matcher = pattern.matcher(line);
-            while (matcher.find()) {
-                String found = line.substring(matcher.start(), matcher.end());
-                System.out.println(found);
-//                String nums = found.substring(found.indexOf("(") + 1, found.lastIndexOf(")"));
-//                String[] args = nums.split(",");
-//                instructionTally += Integer.parseInt(args[0]) * Integer.parseInt(args[1]);
+            String thisLine = line;
+            while (thisLine.length() > 0) {
+                if (enabled) {
+                    int enabledInstructionsEndIndex = thisLine.indexOf("don't()");
+                    if (enabledInstructionsEndIndex == -1) {
+                        instructionTally += instructionSum(thisLine);
+                        thisLine = "";
+                    } else {
+                        enabled = false;
+                        instructionTally += instructionSum(thisLine.substring(0, enabledInstructionsEndIndex));
+                        thisLine = thisLine.substring(enabledInstructionsEndIndex + "don't()".length());
+                    }
+                } else {
+                    int disabledInstructionsEndIndex = thisLine.indexOf("do()");
+                    if (disabledInstructionsEndIndex == -1) {
+                        thisLine = "";
+                    } else {
+                        enabled = true;
+                        thisLine = thisLine.substring(disabledInstructionsEndIndex + "do()".length());
+                    }
+                }
             }
         }
         return instructionTally;
